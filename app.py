@@ -18,8 +18,8 @@ class RecipeWindow(QWidget):
 
         layout = QVBoxLayout()
         
-        # Apply dark mode stylesheet
-        self.setStyleSheet("background-color: #2E2E2E; color: white;")
+        # Apply light mode stylesheet
+        self.setStyleSheet("background-color: white; color: black;")
         
         # Display selected ingredients
         ingredients_label = QLabel(f"Selected Ingredients: {', '.join(ingredients)}")
@@ -30,7 +30,7 @@ class RecipeWindow(QWidget):
         layout.addWidget(results_label)
         
         self.results_list = QListWidget()
-        self.results_list.setStyleSheet("background-color: #444; color: white;")
+        self.results_list.setStyleSheet("background-color: #f9f9f9; color: black;")
         for recipe, url in zip(recipes, urls):
             item = QListWidgetItem(recipe)
             item.setData(Qt.ToolTipRole, url)  # Store URL in tooltip
@@ -55,11 +55,14 @@ class SettingsWindow(QWidget):
     def initUI(self):
         self.setWindowTitle("Settings")
         self.resize(300, 200)  # Increase the size of the settings window
-        
+
         layout = QVBoxLayout()
         
         self.light_theme_radio = QRadioButton("Light Theme")
         self.dark_theme_radio = QRadioButton("Dark Theme")
+        
+        # Set light theme as default selected
+        self.light_theme_radio.setChecked(True)
         
         layout.addWidget(self.light_theme_radio)
         layout.addWidget(self.dark_theme_radio)
@@ -68,7 +71,26 @@ class SettingsWindow(QWidget):
         self.apply_button.clicked.connect(self.save_settings)
         layout.addWidget(self.apply_button)
         
+        # Add footer label
+        footer_label = QLabel("Developed by: Niels Coert and Powered by: Edamam")
+        footer_label.setAlignment(Qt.AlignCenter)
+        footer_label.setStyleSheet("color: gray; font-size: 10px; margin-top: 20px;")  # Style the footer
+        layout.addWidget(footer_label)
+        
         self.setLayout(layout)
+
+    def save_settings(self):
+        if self.light_theme_radio.isChecked():
+            self.main_window.setStyleSheet("background-color: white; color: black;")
+            if self.main_window.recipe_window:  # Check if recipe_window exists
+                self.main_window.recipe_window.setStyleSheet("background-color: white; color: black;")
+            self.main_window.tab_widget.setStyleSheet("QTabWidget::pane { border: 1px solid #ccc; } QTabBar::tab { background: #f0f0f0; color: black; }")
+        elif self.dark_theme_radio.isChecked():
+            self.main_window.setStyleSheet("background-color: #2E2E2E; color: white;")
+            if self.main_window.recipe_window:  # Check if recipe_window exists
+                self.main_window.recipe_window.setStyleSheet("background-color: #2E2E2E; color: white;")
+            self.main_window.tab_widget.setStyleSheet("QTabWidget::pane { border: 1px solid #444; } QTabBar::tab { background: #333; color: white; }")
+        self.close()
 
     def save_settings(self):
         if self.light_theme_radio.isChecked():
@@ -92,6 +114,9 @@ class FlavorFinder(QWidget):
         
     def initUI(self):
         self.setWindowTitle("Flavor Finder")
+        
+        # Set default light mode stylesheet
+        self.setStyleSheet("background-color: white; color: black;")
         
         self.layout = QVBoxLayout()
         
@@ -163,6 +188,20 @@ class FlavorFinder(QWidget):
         if not selected_items:
             QMessageBox.warning(self, "Selection Error", "Please select an ingredient to remove.")
             return
+
+        confirmation = QMessageBox.question(
+            self, 
+            "Remove Ingredient", 
+            "Are you sure you want to remove the selected ingredient(s)?", 
+            QMessageBox.Yes | QMessageBox.No, 
+            QMessageBox.No
+        )
+        
+        if confirmation == QMessageBox.Yes:
+            for item in selected_items:
+                self.selected_ingredients.remove(item.text())
+                self.selected_list.takeItem(self.selected_list.row(item))
+
         
         for item in selected_items:
             self.selected_ingredients.remove(item.text())
@@ -189,7 +228,7 @@ class FlavorFinder(QWidget):
                     recipe_title = recipe['recipe']['label']
                     recipe_url = recipe['recipe']['url']
                     recipes.append(recipe_title)
-                    recipe_urls.append(recipe_url)  # Corrected line
+                    recipe_urls.append(recipe_url)
             else:
                 QMessageBox.information(self, "No Results", "No recipes found for the selected ingredients.")
                 return
@@ -208,3 +247,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
